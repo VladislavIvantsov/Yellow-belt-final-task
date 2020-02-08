@@ -1,63 +1,45 @@
 #include "node.h"
 
-bool EmptyNode::Evaluate(const Date& date, const string& event) const {
-  return true;
+using namespace std;
+
+bool EmptyNode::Evaluate(const Date &date, const string &event) const {
+return true;
 }
 
-template <typename T>
-bool CompareTo(const T& lhs, const T& rhs, Comparison cmp) {
-  switch (cmp) {
-  case Comparison::Less:
-    return lhs < rhs;
-  case Comparison::LessOrEqual:
-    return lhs <= rhs;
-  case Comparison::Equal:
-    return lhs == rhs;
-  case Comparison::NotEqual:
-    return lhs != rhs;
-  case Comparison::Greater:
-    return lhs > rhs;
-  case Comparison::GreaterOrEqual:
-    return lhs >= rhs;
-  }
-  return false; // make compiler happy
+bool DateComparisonNode::Evaluate(const Date &date, const string &event) const {
+    if (_cmp == Comparison::Less) {
+        return date < _date;
+    } else if (_cmp == Comparison::LessOrEqual) {
+        return (date < _date) || !((date < _date) || (_date < date));
+    } else if (_cmp == Comparison::Greater) {
+        return !(date < _date) && ((date < _date) || (_date < date));
+    } else if (_cmp == Comparison::GreaterOrEqual) {
+        return !(date < _date);
+    } else if (_cmp == Comparison::Equal) {
+        return !((date < _date) || (_date < date));
+    }
+    return (date < _date) || (_date < date);
 }
 
-DateComparisonNode::DateComparisonNode(Comparison comparison, const Date& value)
-  : comparison_(comparison)
-  , value_(value)
-{
+bool EventComparisonNode::Evaluate(const Date &date, const string &event) const {
+    bool res;
+    if (_cmp == Comparison::Less) {
+        return event < _event;
+    } else if (_cmp == Comparison::LessOrEqual) {
+        return event <= _event;
+    } else if (_cmp == Comparison::Greater) {
+        return event > _event;
+    } else if (_cmp == Comparison::GreaterOrEqual) {
+        return event >= _event;
+    } else if (_cmp == Comparison::Equal) {
+        return event == _event;
+    }
+    return event != _event;
 }
 
-bool DateComparisonNode::Evaluate(const Date& date, const string&) const {
-  return CompareTo(date, value_, comparison_);
-}
-
-EventComparisonNode::EventComparisonNode(Comparison comparison, const string& value)
-  : comparison_(comparison)
-  , value_(value)
-{
-}
-
-bool EventComparisonNode::Evaluate(const Date&, const string& event) const {
-  return CompareTo(event, value_, comparison_);
-}
-
-LogicalOperationNode::LogicalOperationNode(
-    LogicalOperation operation, shared_ptr<Node> left, shared_ptr<Node> right
-)
-  : operation_(operation)
-  , left_(left)
-  , right_(right)
-{
-}
-
-bool LogicalOperationNode::Evaluate(const Date& date, const string& event) const {
-  switch (operation_) {
-  case LogicalOperation::And:
-    return left_->Evaluate(date, event) && right_->Evaluate(date, event);
-  case LogicalOperation::Or:
-    return left_->Evaluate(date, event) || right_->Evaluate(date, event);
-  }
-  return false; // make compiler happy
+bool LogicalOperationNode::Evaluate(const Date &date, const string &event) const {
+    if (_lop == LogicalOperation::Or) {
+        return _left->Evaluate(date, event) || _right->Evaluate(date, event);
+    }
+    return _left->Evaluate(date, event) && _right->Evaluate(date, event);
 }

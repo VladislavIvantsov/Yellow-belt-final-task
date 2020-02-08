@@ -1,47 +1,65 @@
 #include "date.h"
 
-#include <iomanip>
-#include <tuple>
 using namespace std;
 
-Date ParseDate(istream& is) {
-  Date result;
-  is >> result.year;
-  is.ignore(1);
-  is >> result.month;
-  is.ignore(1);
-  is >> result.day;
-  return result;
+
+int Date::Validate(const int &value, const int &left, const int &right, const string &his) {
+    if (value < left || value > right) {
+        throw invalid_argument(his + " value is invalid: " + to_string(value));
+    }
+    return value;
 }
 
-ostream& operator << (ostream& os, const Date& date) {
-  os << setw(4) << setfill('0') << date.year << '-'
-     << setw(2) << setfill('0') << date.month << '-'
-     << setw(2) << setfill('0') << date.day;
-  return os;
+int Date::GetYear() const {
+    return this->_year;
 }
 
-bool operator == (const Date& lhs, const Date& rhs) {
-  return tie(lhs.year, lhs.month, lhs.day) == tie(rhs.year, rhs.month, rhs.day);
+int Date::GetMonth() const {
+    return this->_month;
 }
 
-bool operator != (const Date& lhs, const Date& rhs) {
-  return tie(lhs.year, lhs.month, lhs.day) != tie(rhs.year, rhs.month, rhs.day);
+int Date::GetDay() const {
+    return this->_day;
 }
 
-bool operator < (const Date& lhs, const Date& rhs) {
-  return tie(lhs.year, lhs.month, lhs.day) < tie(rhs.year, rhs.month, rhs.day);
+ostream &operator<<(ostream &stream, const Date &date) {
+    stream << setw(4) << setfill('0') << date.GetYear() << '-' << setw(2) << date.GetMonth() << '-' << setw(2)
+           << date.GetDay();
+    return stream;
 }
 
-bool operator <= (const Date& lhs, const Date& rhs) {
-  return tie(lhs.year, lhs.month, lhs.day) <= tie(rhs.year, rhs.month, rhs.day);
+Date ParseDate(istream &stream) {
+    string input;
+    stream >> input;
+    stringstream ss(input);
+    int day, year, month;
+    if (!(ss >> year) || ss.peek() != '-') {
+        throw invalid_argument("Wrong date format: " + input);
+    }
+    ss.ignore(1);
+    if (!(ss >> month) || ss.peek() != '-') {
+        throw invalid_argument("Wrong date format: " + input);
+    }
+    ss.ignore(1);
+    if (!(ss >> day) || ss.peek() != EOF) {
+        throw invalid_argument("Wrong date format: " + input);
+    }
+    return Date(year, month, day);
 }
 
-bool operator > (const Date& lhs, const Date& rhs) {
-  return tie(lhs.year, lhs.month, lhs.day) > tie(rhs.year, rhs.month, rhs.day);
+bool operator<(const Date &lhs, const Date &rhs) {
+    if (lhs.GetYear() < rhs.GetYear()) {
+        return true;
+    }
+    if (lhs.GetYear() == rhs.GetYear()) {
+        if (lhs.GetMonth() < rhs.GetMonth()) {
+            return true;
+        }
+        if (lhs.GetMonth() == rhs.GetMonth()) {
+            if (lhs.GetDay() < rhs.GetDay()) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
-
-bool operator >= (const Date& lhs, const Date& rhs) {
-  return tie(lhs.year, lhs.month, lhs.day) >= tie(rhs.year, rhs.month, rhs.day);
-}
-
